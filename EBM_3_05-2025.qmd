@@ -1215,7 +1215,7 @@ ggplot(patient_data, aes(x = x, y = y, fill = outcome)) +
   # Add text labels
   geom_text(aes(label = "Patient"), y = 1.1, size = 3.5) +
   geom_text(aes(label = x), y = 1.1, vjust = 1.8, fontface = "bold", size = 4) +
-  geom_text(aes(label = description), vjust = 0.7, size = 3.2) +
+  geom_text(aes(label = description), vjust = 0.75, size = 3.2) +
   
   # Add title
   annotate("text", x = 2.5, y = 1.2, 
