@@ -27,9 +27,9 @@ format:
 - Brief Review: Pre-test to Post-test (2 min)
 - Study Types & Evidence Pyramid (3 min)
 - Key Concepts: Trials & Modeling (5 min)
-- $H_0$, P-values, CIs
-- Basic Regression
-- Bias & Confounding
+  - $H_0$, P-values, CIs
+  - Basic Regression
+  - Bias & Confounding
 :::
 
 ::: {.column width="4%"}
@@ -71,9 +71,9 @@ format:
 - How *studies* generate evidence
 - Exploring different study types
 - Focus on:
-- Building clinical models
-- Interpreting "negative" trials
-- Understanding "positive" trials
+  - Building clinical models
+  - Interpreting "negative" trials
+  - Understanding "positive" trials
 :::
 :::
 
@@ -196,7 +196,7 @@ $$
 \end{align}
 $$
 
-Where `p` = probability of admission. Binary variables (concern, breathing, oedema, pallor) coded as 1 if present, 0 if absent.
+Where `p` = probability of admission.
 
 Transformed O$_2$ Saturation: $70.103 \times \log_{10}(101.687 - \text{SpO2}) - 55.833$.
 
@@ -1341,15 +1341,15 @@ ggsurvplot(
 
 ## Pulling It All Together
 
-1.  **Diagnostic Models (Mawji et al.):**
+- **Diagnostic Models (Mawji et al.):**
   - Logistic regression effectively combines factors to estimate outcome probability
   - Transparency (equation) & performance metrics (AUC, sens, spec) are essential
 
-2.  **"Negative" Trials (Butz et al., Teunissen et al.):**
+- **"Negative" Trials (Butz et al., Teunissen et al.):**
   - "No significant difference" ≠ "No effect"
   - Evaluate study power & CI width; was clinically important benefit ruled out?
 
-3.  **"Positive" Trials (Tähtinen et al.):**
+- **"Positive" Trials (Tähtinen et al.):**
   - Statistical significance is necessary but insufficient
   - Effect size (ARR, NNT, HR) & CIs show magnitude/precision
   - Clinical significance requires weighing benefits vs. harms, costs, patient values
