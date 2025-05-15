@@ -1,0 +1,103 @@
+/* Basic reset and general styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Basic slide styles */
+.reveal .slides {
+  font-size: 24px;
+}
+
+/* Title slide specific styles */
+.title-slide {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+.title-slide h1, .title-slide h2, .title-slide h3 {
+  text-align: center !important;
+}
+
+/* Regular slide styles - explicitly override title slide settings */
+.reveal .slides > section:not([data-state="title-slide"]) {
+  display: block !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+.reveal .slides > section:not([data-state="title-slide"]) h1 {
+  font-size: 2.2em;
+  color: #005b96;
+  text-align: left !important;
+  position: relative !important;
+  top: 0 !important;
+  margin-bottom: 20px !important;
+}
+
+.reveal .slides > section:not([data-state="title-slide"]) h2,
+.reveal .slides > section:not([data-state="title-slide"]) h3 {
+  color: #005b96;
+  text-align: left !important;
+}
+
+/* Column layout styles */
+.columns {
+  display: flex;
+  width: 100%;
+}
+
+.column {
+  padding: 0 10px;
+}
+
+/* Ensure lists are properly aligned */
+.reveal ul, .reveal ol {
+  display: block;
+  text-align: left;
+  margin-left: 1em;
+}
+
+.reveal h1{
+  font-size: 2.2em;
+  color: #005b96;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.reveal h2 {
+  font-size: 1.8em;
+  color: #005b96;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.figure, .graphviz {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Target the SVG element itself */
+.figure svg, .graphviz svg {
+  display: block;
+  max-height: none !important;
+}
+
+/* Make the top-right logo larger */
+.reveal .slide-logo {
+  max-height: 50px !important; /* Increase this value to make the logo larger */
+  max-width: auto !important;
+}
+
+/* Maintain centered text in footer */
+.reveal .footer {
+  text-align: center !important;
+  position: relative; /* Needed for z-index to work properly */
+}

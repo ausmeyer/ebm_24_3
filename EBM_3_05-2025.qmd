@@ -1,0 +1,1366 @@
+---
+title: "EBM 2024: Lecture 3" 
+subtitle: "Interpreting Clinical Studies: Models, Trials, and When Things Don't Go as Planned"
+author: "Austin Meyer, MD, PhD, MS, MPH, MS" 
+date: "2025-05-16"
+format: 
+  revealjs: 
+    theme: default 
+    html-math-method: mathjax 
+    css: custom.css 
+    slideNumber: true 
+    transition: slide 
+    title-slide-attributes: 
+      data-state: title-slide 
+    self-contained: false
+    logo: "figs/bcm.png"   # Optional: Add your institution logo
+    footer: "Pediatrics Evidence-Based Medicine 2024-25"  # Optional: Add persistent footer
+    highlight-style: github  # Better code highlighting
+    code-fold: false  # Show code by default
+---
+
+## Roadmap - Exactly 50 Minutes...
+
+::: {.columns}
+::: {.column width="48%"}
+### Fundamentals & Refreshers
+- Brief Review: Pre-test to Post-test (2 min)
+- Study Types & Evidence Pyramid (3 min)
+- Key Concepts: Trials & Modeling (5 min)
+- $H_0$, P-values, CIs
+- Basic Regression
+- Bias & Confounding
+:::
+
+::: {.column width="4%"}
+<!-- Spacer column -->
+:::
+
+::: {.column width="48%"}
+### Case Studies: Diving into Evidence
+
+1.  **Diagnostic Modeling:** Pediatric Triage (12 min)
+2.  **"Negative" Trial:** Power & Interventions (12 min)
+3.  **"Positive" Trial:** Treating AOM (11 min)
+
+- Q\&A (5 min)
+:::
+:::
+
+# Introduction
+
+## Beyond Single Tests: Evaluating Broader Evidence
+
+::: {.columns}
+::: {.column width="48%"}
+
+### Last Lecture Recap:
+
+- Diagnostic tests shift probability
+- Helped make decisions for *individual patients*
+:::
+
+::: {.column width="4%"}
+<!-- Spacer column -->
+:::
+
+::: {.column width="48%"}
+
+### This Lecture:
+
+- How *studies* generate evidence
+- Exploring different study types
+- Focus on:
+- Building clinical models
+- Interpreting "negative" trials
+- Understanding "positive" trials
+:::
+:::
+
+## Quick Refresher: The Probability Journey
+
+- **Pre-test Probability:** Initial clinical suspicion
+- **Diagnostic Test:** New information (Sensitivity, Specificity, LRs)
+- **Post-test Probability:** Updated clinical suspicion
+- **Today:** The studies *behind* these numbers
+
+## Study Types & Why They Matter
+
+::: {.columns}
+::: {.column width="45%"}
+
+- **Observational:**
+  - Cohort, Case-Control, Cross-Sectional
+- **Experimental:**
+- **Randomized Controlled Trials (RCTs) - *Gold Standard for Therapy***
+- **Syntheses:**
+  - Systematic Reviews & Meta-Analyses
+:::
+
+::: {.column width="55%"}
+```{r evidence_pyramid, echo=FALSE, fig.align='center', fig.width=9, fig.height=6, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+levels_pyr <- c("Systematic Reviews / Meta-Analyses", 
+                "Randomized Controlled Trials", 
+                "Cohort Studies", 
+                "Case-Control Studies", 
+                "Case Series / Reports",
+                "Expert Opinion / Editorials")
+
+df_pyr <- data.frame(
+  Level = factor(levels_pyr, levels = rev(levels_pyr)),
+  Value = 6:1,
+  ymin = c(5, 4, 3, 2, 1, 0),
+  ymax = c(5.8, 6.8, 7.8, 8.8, 9.8, 10.8) 
+)
+
+# Enhanced color palette for better contrast
+blue_palette_pyr <- rev(c("#1a237e", "#283593", "#3949ab", "#5c6bc0", "#7986cb", "#9fa8da"))
+
+ggplot(df_pyr, aes(xmin = 0, xmax = Value, ymin = ymin-2.5, ymax = ymax+2.5, fill = Level)) +
+  geom_rect() +
+  coord_flip() +
+  scale_fill_manual(values = blue_palette_pyr) +
+  scale_y_continuous(breaks = NULL, expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0), limits = c(0, 6), labels = NULL) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    legend.position = "none",
+    panel.grid = element_blank(),
+    plot.margin = margin(10, 10, 10, 10),
+    plot.background = element_rect(fill = "white", color = NA)
+  ) +
+  geom_text(
+    aes(x = Value - 0.5, y = (ymin + ymax) / 2, label = Level),
+    hjust = 0.5, vjust = 0.5, size = 4.5, color = "white", fontface = "bold"
+  ) +
+  labs(title = "Evidence Pyramid") +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold", margin = margin(b = 20)))
+```
+:::
+:::
+
+- **Goal:** Understand strength of evidence from different research designs
+
+## Core Concepts (1/3)
+
+- **Null Hypothesis ($H_0$):** Assumption of NO difference or NO effect
+- Research aims to *reject* or *fail to reject* $H_0$
+- **P-value:** Probability of observing study results (or more extreme) IF $H_0$ is true
+- **Not** P($H_0$ is true) or P(Type I error)
+- P(Data | $H_0$) — Informs Type I error risk
+
+## Core Concepts (2/3)
+
+- **Confidence Interval (CI):** Range likely containing the true population parameter
+- 95% CI: If study repeated many times, 95% of CIs would contain true value
+- If 95% CI for a difference *excludes 0* (or *1* for ratios), then p < 0.05
+
+## Core Concepts (3/3)
+
+- **Regression:** Statistical method modeling relationships between predictors and outcomes
+- **Logistic Regression:** For binary outcomes (yes/no); estimates *odds* of outcome
+- **Bias:** Systematic error in study design or execution
+- **Confounding:** Third variable distorts exposure-outcome relationship
+- RCTs help minimize these issues through randomization
+
+# Case Study 1: Diagnostic Modeling - Pediatric Triage
+
+## Challenge: Spotting Sick Kids Fast
+
+- Critical challenge in busy/low-resource settings
+- How to systematically use available information?
+- **Study:** Mawji A, Li E, Dunsmuir D, et al. (2022). Smart triage: Development of a rapid pediatric triage algorithm for use in low-and-middle income countries. *Frontiers in Pediatrics*, 10, 976870.
+
+## Building the Model: Logistic Regression
+
+- **Goal:** Predict hospital admission (proxy for severe illness)
+- **Method:** Analysis of data from acutely ill children in Jinja, Uganda
+- **The Model Equation:**
+$$
+\begin{align}
+\text{logit}(p) &= -32.888 \\
+&+ (0.252 \times \sqrt{\text{age in months}}) \\
+&+ (0.016 \times \text{heart rate}) \\
+&+ (0.819 \times \text{temperature }^\circ C) \\
+&+ (-0.022 \times \text{MUAC in mm}) \\
+&+ (0.048 \times \text{transformed O}_2 \text{ saturation}) \\
+&+ (1.793 \times \text{parent concern}) \\
+&+ (1.012 \times \text{difficulty breathing}) \\
+&+ (1.814 \times \text{oedema}) \\
+&+ (1.506 \times \text{pallor})
+\end{align}
+$$
+
+Where `p` = probability of admission. Binary variables (concern, breathing, oedema, pallor) coded as 1 if present, 0 if absent.
+
+Transformed O$_2$ Saturation: $70.103 \times \log_{10}(101.687 - \text{SpO2}) - 55.833$.
+
+## Understanding Logistic Regression Output
+
+- **logit(p):** Log-odds of admission: $\ln\left(\frac{p}{1-p}\right)$
+- **Coefficients:** For each 1-unit increase in predictor, log-odds changes by coefficient value
+- Example: For 1 bpm increase in heart rate, log-odds increases by 0.016
+- Exponentiating gives **Odds Ratio (OR)**
+- $e^{0.016} \approx 1.016$ → ~1.6% increase in *odds* per 1 bpm HR increase
+- **Intercept (-32.888):** Log-odds when all predictors are zero/reference
+
+```{r mawji_ors, echo=FALSE, fig.align='center', fig.width=9, fig.height=5.5, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+predictor_data <- data.frame(
+  Predictor = factor(c("Parent Concern", "Oedema", "Pallor", "Diff. Breathing", "Temperature", "Age (sqrt)", "Transf. O2 Sat", "Heart Rate", "MUAC (mm)"), 
+                     levels = c("MUAC (mm)", "Heart Rate", "Transf. O2 Sat", "Age (sqrt)", "Temperature", "Diff. Breathing", "Pallor", "Oedema", "Parent Concern")),
+  OR = c(6.01, 6.14, 4.51, 2.75, 2.27, 1.29, 1.05, 1.02, 0.98),
+  LowerCI = c(3.79, 2.44, 2.69, 1.97, 1.92, 1.18, 1.02, 1.01, 0.97),
+  UpperCI = c(9.63, 10.76, 7.59, 3.84, 2.69, 1.40, 1.07, 1.02, 0.98)
+)
+
+# Enhanced plot with better colors and readability
+ggplot(predictor_data, aes(x = OR, y = Predictor)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey50", linewidth = 0.8) +
+  geom_errorbarh(aes(xmin = LowerCI, xmax = UpperCI), height = 0.4, color = "#1976d2", linewidth = 1.2) +
+  geom_point(size = 4.5, color = "#1976d2", fill = "white", shape = 21, stroke = 1.5) +
+  scale_x_log10(breaks = c(0.1, 0.5, 1, 2, 5, 10), labels = scales::label_number(accuracy = 0.1)) +
+  labs(
+    title = "Odds Ratios for Predictors in Pediatric Triage Model",
+    subtitle = "(Mawji et al., 2022)",
+    x = "Odds Ratio (log scale)", 
+    y = NULL,
+    caption = "Error bars represent 95% confidence intervals"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    axis.text.y = element_text(size = 11, face = "bold"),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(face = "italic", size = 12),
+    plot.caption = element_text(hjust = 0, face = "italic"),
+    axis.title.x = element_text(margin = margin(t = 10), face = "bold"),
+    plot.margin = margin(10, 15, 10, 10)
+  )
+```
+
+## From Log-Odds to Probability
+
+1.  Calculate `logit(p)` using patient's data
+2.  Convert to probability `p`:
+$$p = \frac{e^{\text{logit}(p)}}{1 + e^{\text{logit}(p)}} = \frac{1}{1 + e^{-\text{logit}(p)}}$$
+
+```{r sigmoid_plot, echo=FALSE, fig.align='center', fig.width=7, fig.height=4.5, message=FALSE, warning=FALSE}
+library(ggplot2)
+logit_vals <- seq(-6, 6, length.out = 100)
+prob_vals <- 1 / (1 + exp(-logit_vals))
+sigmoid_df <- data.frame(LogitP = logit_vals, Probability = prob_vals)
+
+ggplot(sigmoid_df, aes(x = LogitP, y = Probability)) +
+  geom_line(color = "#0d47a1", size = 1.8) +
+  geom_hline(yintercept = c(0, 0.5, 1), linetype = "dashed", color = "grey70") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey70") +
+  labs(
+    title = "Logistic Function: Converting Log-Odds to Probability",
+    x = "Log-Odds of Admission (logit(p))",
+    y = "Probability of Admission (p)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(face = "italic"),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(10, 15, 10, 10)
+  ) +
+  annotate("text", x = 5, y = 0.95, label = "p → 1", color = "#0d47a1", fontface = "bold") +
+  annotate("text", x = -5, y = 0.05, label = "p → 0", color = "#0d47a1", fontface = "bold") +
+  annotate("text", x = -4, y = 0.5, label = "p = 0.5 when logit(p) = 0", 
+           color = "grey30", fontface = "italic")
+```
+
+## Example: Simulated Patient
+
+- Age: 12 months ($\sqrt{12} \approx 3.464$)
+- HR: 140 bpm; Temp: 38.5 $^\circ C$; MUAC: 130 mm
+- O$_2$ Sat: 92% (Transformed: $70.103 \times \log_{10}(101.687 - 92) - 55.833 \approx 13.302$)
+- Parent concern: Yes (1); Difficulty breathing: Yes (1)
+- Oedema: No (0); Pallor: Yes (1)
+
+```{r mawji_calc, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+# Calculate example patient's probability
+intercept <- -32.888
+coef_sqrt_age <- 0.252
+coef_hr <- 0.016
+coef_temp <- 0.819
+coef_muac_mm <- -0.022
+coef_transformed_o2 <- 0.048
+coef_parent_concern <- 1.793
+coef_diff_breathing <- 1.012
+coef_oedema <- 1.814
+coef_pallor <- 1.506
+
+age_months <- 12
+hr <- 140
+temp_c <- 38.5
+muac_mm_val <- 130
+spo2_val <- 92
+transformed_o2_value <- 70.103 * log10(101.687 - spo2_val) - 55.833
+parent_concern_val <- 1
+diff_breathing_val <- 1
+oedema_val <- 0
+pallor_val <- 1
+
+logit_p_mawji <- intercept +
+  (coef_sqrt_age * sqrt(age_months)) +
+  (coef_hr * hr) +
+  (coef_temp * temp_c) +
+  (coef_muac_mm * muac_mm_val) +
+  (coef_transformed_o2 * transformed_o2_value) +
+  (coef_parent_concern * parent_concern_val) +
+  (coef_diff_breathing * diff_breathing_val) +
+  (coef_oedema * oedema_val) +
+  (coef_pallor * pallor_val)
+
+prob_admission_mawji <- exp(logit_p_mawji) / (1 + exp(logit_p_mawji))
+```
+
+- Calculated Result:
+- Logit(p) = -0.925
+- Probability of admission = 0.284 (28.4%)
+
+## Model Performance & Risk Stratification
+
+- **AUC (Area Under ROC Curve):** 0.86 ("good discrimination")
+- **Risk Stratification (Mawji et al., 2022):**
+  - Low-risk threshold: < 8% probability (Sensitivity 91%)
+  - High-risk threshold: > 40% probability (Specificity 92%)
+  - Categories: Non-urgent, Priority, Emergency
+
+**Our patient:** p = 28.4% → **Priority** (between 8% and 40%)
+
+```{r risk_strat_plot, echo=FALSE, fig.align='center', fig.width=8, fig.height=3.5, message=FALSE, warning=FALSE}
+library(ggplot2)
+risk_df <- data.frame(x = c(0, 1))
+patient_prob <- 0.284  # Using the calculated probability from previous chunk
+
+ggplot(risk_df, aes(x = x, y = 0)) +
+  # Base line with rounded ends
+  geom_segment(aes(x = 0, xend = 1, y = 0, yend = 0), 
+               linewidth = 10, color = "#e0e0e0", 
+               lineend = "butt") +
+  
+  # Color segments - adjusting the Non-Urgent segment to extend all the way left
+  geom_segment(aes(x = 0.40, xend = 1, y = 0, yend = 0), 
+               linewidth = 10, color = "#f44336", 
+               lineend = "butt", linejoin = "round") + # Flat on left, round on right
+  geom_segment(aes(x = 0.08, xend = 0.40, y = 0, yend = 0), 
+               linewidth = 10, color = "#ff9800", lineend = "butt") +
+  geom_segment(aes(x = 0, xend = 0.08, y = 0, yend = 0), 
+               linewidth = 10, color = "#4caf50", 
+               lineend = "butt", linejoin = "round") + # Round on left edge
+  
+  # Add black lines at thresholds
+  geom_segment(aes(x = 0.08, xend = 0.08, y = -0.02, yend = 0.02), 
+               linewidth = 1.5, color = "black") +
+  geom_segment(aes(x = 0.40, xend = 0.40, y = -0.02, yend = 0.02), 
+               linewidth = 1.5, color = "black") +
+  
+  # Patient marker - blue circle with white border
+  geom_point(aes(x = patient_prob, y = 0), color = "white", size = 16, shape = 21, 
+             fill = "#2196f3", stroke = 2) +
+  
+  # Patient probability label
+  annotate("text", x = patient_prob, y = 0.08, 
+           label = "Patient Risk", 
+           color = "#2196f3", fontface = "bold", size = 4.5) +
+  annotate("text", x = patient_prob, y = 0.05, 
+           label = paste0("P(admission) = 28%"), 
+           color = "#2196f3", size = 4) +
+  
+  # Category labels - larger and more distinct
+  annotate("text", x = 0.04, y = -0.07, label = "Non-Urgent", color = "darkgreen", 
+           fontface = "bold", size = 4) +
+  annotate("text", x = 0.04, y = -0.10, label = "(<8%)", color = "darkgreen", size = 3.5) +
+  
+  annotate("text", x = 0.24, y = -0.07, label = "Priority", color = "darkorange", 
+           fontface = "bold", size = 4) +
+  annotate("text", x = 0.24, y = -0.10, label = "(8-40%)", color = "darkorange", size = 3.5) +
+  
+  annotate("text", x = 0.70, y = -0.07, label = "Emergency", color = "darkred", 
+           fontface = "bold", size = 4) +
+  annotate("text", x = 0.70, y = -0.10, label = "(>40%)", color = "darkred", size = 3.5) +
+  
+  # Values at key points
+  annotate("text", x = 0, y = -0.03, label = "0", size = 3, vjust = 1) +
+  annotate("text", x = 0.08, y = -0.03, label = "0.08", size = 3, vjust = 1) +
+  annotate("text", x = 0.40, y = -0.03, label = "0.40", size = 3, vjust = 1) +
+  annotate("text", x = 1, y = -0.03, label = "1.00", size = 3, vjust = 1) +
+  
+  # Scales and theme
+  scale_x_continuous(limits = c(-0.05, 1.05), breaks = NULL) +
+  scale_y_continuous(limits = c(-0.12, 0.10)) +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(),
+    axis.title.x = element_text(face = "bold", size = 12, margin = margin(t = 25)),
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5, size = 12),
+    plot.margin = margin(30, 20, 20, 20)
+  ) +
+  labs(
+    title = "Risk Stratification Based on Predicted Probability",
+    x = "Predicted Probability of Admission"
+  )
+```
+
+## Teaching Points: Mawji et al. Triage Model
+
+- Addresses real-world clinical need
+- Logistic regression effectively combines factors for binary outcome prediction
+- Transparent model (published equation) enables application/testing
+- Performance metrics (AUC, Sensitivity, Specificity) are crucial
+- Risk stratification translates model output to actionable decisions
+
+# Case Study 2: "Negative" Trial - Power & Asthma
+
+## Question: Home Environmental Interventions for Asthma ED Visits?
+
+- Poorly controlled asthma often leads to frequent ED visits
+- Home triggers are known contributing factors
+- **Study:** Butz AM, Bollinger ME, Ogborn J, et al. (2019). Children with poorly controlled asthma: Randomized controlled trial of a home-based environmental control intervention. *Pediatric Pulmonology*, 54(3), 245–256.
+
+## Study Design: An RCT (Butz et al., 2019)
+
+::: {.columns}
+::: {.column width="48%"}
+### Methodology
+- **Population:** Children (3-12 yrs) with persistent asthma, ≥2 ED visits or >1 hospitalization in past year
+- **Randomized:** Yes, 222 children
+- **Primary Outcome:** Proportion with >1 ED repeat asthma visit in 12 months
+:::
+
+::: {.column width="4%"}
+<!-- Spacer column -->
+:::
+
+::: {.column width="48%"}
+### Hypothesis & Power
+- **$H_0$:** Intervention does NOT reduce proportion with >1 ED visit
+- **$H_A$:** Intervention DOES reduce this proportion
+- **Power Calculation (a priori):**
+  - Expected ~92% in control will have >1 ED visit
+  - Aimed to detect reduction to 75% (17% absolute reduction)
+  - For **90% power**, α=0.05, needed **110 per group**
+  - Enrollment achieved: INT n=107, CON n=115
+:::
+:::
+
+## From Theory to Practice: Sample Size Calculation
+
+::: {.columns}
+::: {.column width="50%"}
+### Sample Size Formula
+$n \text{ per group} = \frac{(Z_{\alpha/2} + Z_{\beta})^2 \times [p_1(1-p_1) + p_2(1-p_2)]}{(p_1 - p_2)^2}$
+
+#### Where:
+- $Z_{\alpha/2}$ = 1.96 for α = 0.05 (two-sided)
+- $Z_{\beta}$ = 1.28 for 90% power
+- $p_1$ = fraction >1 ED visit in cont group (0.92)
+- $p_2$ = fraction >1 ED visit in int group (0.75)
+
+### Effect Size Matters!
+- Smaller effects require larger samples
+- 17% reduction is clinically meaningful
+:::
+
+::: {.column width="50%"}
+```{r power_sample_viz, echo=FALSE, fig.height=4, fig.width=5, fig.align='center'}
+library(ggplot2)
+
+# Create data frame for power curves
+sample_sizes <- seq(10, 150, by=1)
+effect_small <- power.prop.test(p1=0.92, p2=0.85, power=NULL, 
+                                n=sample_sizes, sig.level=0.05)$power
+effect_medium <- power.prop.test(p1=0.92, p2=0.80, power=NULL, 
+                                 n=sample_sizes, sig.level=0.05)$power
+effect_large <- power.prop.test(p1=0.92, p2=0.75, power=NULL, 
+                                n=sample_sizes, sig.level=0.05)$power
+
+df <- data.frame(
+  sample_size = rep(sample_sizes, 3),
+  power = c(effect_small, effect_medium, effect_large),
+  effect = rep(c("Small (7%)", "Medium (12%)", "Large (17%)"), 
+               each=length(sample_sizes))
+)
+
+# Plot power curves
+ggplot(df, aes(x=sample_size, y=power, color=effect)) +
+  geom_line(size=1.2) +
+  geom_hline(yintercept=0.9, linetype="dashed", color="gray40") +
+  geom_vline(xintercept=110, linetype="dashed", color="black") +
+  scale_y_continuous(limits=c(0,1), labels=scales::percent) +
+  scale_color_manual(values=c("darkred", "darkorange", "darkgreen")) +
+  labs(title="Power vs. Sample Size by Effect Size",
+       x="Sample Size (per group)",
+       y="Statistical Power",
+       color="Effect Size") +
+  annotate("text", x=55, y=0.97, label="Butz et al.\ndesign point", hjust=0) +
+  theme_minimal()
+```
+:::
+:::
+
+## Calculating Sample Size for the Study
+
+::: {.columns}
+::: {.column width="60%"}
+### Sample Size Formula for Two Proportions
+$n \text{ per group} = \frac{(Z_{\alpha/2} + Z_{\beta})^2 \times [p_1(1-p_1) + p_2(1-p_2)]}{(p_1 - p_2)^2}$
+
+### Plugging in the Values
+- $Z_{\alpha/2}$ = 1.96 (α = 0.05)
+- $Z_{\beta}$ = 1.28 (Power = 90%)
+- $p_1$ = 0.92 (Control)
+- $p_2$ = 0.75 (Intervention)
+
+$n = \frac{(1.96 + 1.28)^2 \times [0.92(1-0.92) + 0.75(1-0.75)]}{(0.92 - 0.75)^2}$
+
+$n = \frac{10.5 \times (0.0736 + 0.1875)}{0.0289} = 95$ patients per group
+
+### Adjustment for Attrition
+- Added ~15% buffer for potential dropouts
+- Final target: 110 per group
+:::
+
+::: {.column width="40%"}
+```{r power_curves_viz, echo=FALSE, fig.height=4, fig.width=4.5, fig.align='center'}
+library(ggplot2)
+
+# Create data frame for power curves
+sample_sizes <- seq(10, 150, by=1)
+effect_small <- power.prop.test(p1=0.92, p2=0.85, power=NULL, 
+                                n=sample_sizes, sig.level=0.05)$power
+effect_medium <- power.prop.test(p1=0.92, p2=0.80, power=NULL, 
+                                 n=sample_sizes, sig.level=0.05)$power
+effect_large <- power.prop.test(p1=0.92, p2=0.75, power=NULL, 
+                                n=sample_sizes, sig.level=0.05)$power
+
+df <- data.frame(
+  sample_size = rep(sample_sizes, 3),
+  power = c(effect_small, effect_medium, effect_large),
+  effect = rep(c("Small (7%)", "Medium (12%)", "Large (17%)"), 
+               each=length(sample_sizes))
+)
+
+# Plot power curves
+ggplot(df, aes(x=sample_size, y=power, color=effect)) +
+  geom_line(size=1.2) +
+  geom_hline(yintercept=0.9, linetype="dashed", color="gray40") +
+  geom_vline(xintercept=110, linetype="dashed", color="black") +
+  scale_y_continuous(limits=c(0,1), labels=scales::percent) +
+  scale_color_manual(values=c("darkred", "darkorange", "darkgreen")) +
+  labs(title="Sample Size Requirements",
+       x="Sample Size (per group)",
+       y="Power",
+       color="Effect Size") +
+  annotate("text", x=113, y=0.85, label="n=110", hjust=0) +
+  theme_minimal(base_size=9) +
+  theme(legend.position="bottom", legend.title=element_text(size=8))
+```
+:::
+:::
+
+## Short Detour: Understanding Hypothesis Testing
+
+- **Type I Error (α)**: Probability of falsely rejecting a true null hypothesis
+- **Type II Error (β)**: Probability of failing to reject a false null hypothesis
+- **Statistical Power (1-β)**: Probability of correctly rejecting a false null hypothesis
+
+```{r power_plot_basic, echo=FALSE, fig.width=8, fig.height=5, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+x_power <- seq(-4, 8, length.out = 200)
+null_dist <- dnorm(x_power, mean = 0, sd = 1.5)
+alt_dist_large_effect <- dnorm(x_power, mean = 4, sd = 1.5) 
+crit_val <- qnorm(0.975, mean = 0, sd = 1.5) 
+
+power_df <- data.frame(x = x_power, 
+                       null = null_dist, 
+                       alt_large = alt_dist_large_effect)
+
+ggplot(power_df, aes(x = x)) +
+  # Add distribution lines
+  geom_line(aes(y = null, color = "H0: No Effect"), linewidth = 1.2) +
+  geom_line(aes(y = alt_large, color = "Ha: Large Effect"), linewidth = 1.2) +
+  # Critical value line
+  geom_vline(xintercept = crit_val, linetype = "dashed", color = "black", linewidth = 0.8) +
+  # Scales and theme
+  scale_color_manual(values = c("H0: No Effect" = "#1565c0", "Ha: Large Effect" = "#2e7d32")) +
+  labs(
+    x = "Observed Effect Size", 
+    y = "Probability Density",
+    color = "Distribution"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    plot.margin = margin(10, 15, 10, 10)
+  )
+```
+
+## Type I Error (α)
+
+- The area where we reject H0 when it is actually true
+- This is our **false positive** risk
+- In scientific research, we typically control this at 5% (α = 0.05)
+- For a negative study result, this is not our primary concern
+
+```{r power_plot_alpha, echo=FALSE, fig.width=8, fig.height=5, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+x_power <- seq(-4, 8, length.out = 200)
+null_dist <- dnorm(x_power, mean = 0, sd = 1.5)
+alt_dist_large_effect <- dnorm(x_power, mean = 4, sd = 1.5) 
+crit_val <- qnorm(0.975, mean = 0, sd = 1.5) 
+
+power_df <- data.frame(x = x_power, 
+                       null = null_dist, 
+                       alt_large = alt_dist_large_effect)
+
+ggplot(power_df, aes(x = x)) +
+  # Add alpha shaded region
+  geom_ribbon(data = subset(power_df, x >= crit_val), 
+              aes(ymax = null, ymin = 0), fill = "#ffcdd2", alpha = 0.7) +
+  # Add distribution lines
+  geom_line(aes(y = null, color = "H0: No Effect"), linewidth = 1.2) +
+  geom_line(aes(y = alt_large, color = "Ha: Large Effect"), linewidth = 1.2) +
+  # Critical value line
+  geom_vline(xintercept = crit_val, linetype = "dashed", color = "black", linewidth = 0.8) +
+  # Annotations for alpha
+  annotate("text", x = 3.6, y = -0.02, label = "Type I\nError (α)", color = "#d32f2f", size = 4) +
+  # Scales and theme
+  scale_color_manual(values = c("H0: No Effect" = "#1565c0", "Ha: Large Effect" = "#2e7d32")) +
+  labs(
+    title = "Type I Error Risk",
+    x = "Observed Effect Size", 
+    y = "Probability Density",
+    color = "Distribution"
+  ) +
+  coord_cartesian(clip = "off") +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    plot.margin = margin(10, 15, 10, 10)
+  )
+```
+
+## Type II Error (β) and Statistical Power
+
+- **Type II Error (β)**: Probability of failing to reject H0 when Ha is true
+- **Statistical Power (1-β)**: Probability of correctly rejecting false H0
+- Underpowered studies risk missing true effects
+- Affected by: sample size, effect size, variability, and significance level
+
+```{r power_plot_beta, echo=FALSE, fig.width=8, fig.height=5, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+x_power <- seq(-4, 8, length.out = 200)
+null_dist <- dnorm(x_power, mean = 0, sd = 1.5)
+alt_dist_large_effect <- dnorm(x_power, mean = 4, sd = 1.5) 
+crit_val <- qnorm(0.975, mean = 0, sd = 1.5) 
+
+power_df <- data.frame(x = x_power, 
+                       null = null_dist, 
+                       alt_large = alt_dist_large_effect)
+
+ggplot(power_df, aes(x = x)) +
+  # Add beta shaded region
+  geom_ribbon(data = subset(power_df, x <= crit_val), 
+              aes(ymax = alt_large, ymin = 0), fill = "#bbdefb", alpha = 0.7) +
+  # Add power shaded region
+  geom_ribbon(data = subset(power_df, x >= crit_val), 
+              aes(ymax = alt_large, ymin = 0), fill = "#c8e6c9", alpha = 0.7) +
+  # Add distribution lines
+  geom_line(aes(y = null, color = "H0: No Effect"), linewidth = 1.2) +
+  geom_line(aes(y = alt_large, color = "Ha: Large Effect"), linewidth = 1.2) +
+  # Critical value line
+  geom_vline(xintercept = crit_val, linetype = "dashed", color = "black", linewidth = 0.8) +
+  # Annotations
+  annotate("text", x = 2.0, y = 0.03, label = "Type II\nError (β)", color = "#1565c0", size = 5) +
+  annotate("text", x = 4.5, y = 0.11, label = "POWER", color = "darkgreen", size = 5, fontface = "bold") +
+  # Scales and theme
+  scale_color_manual(values = c("H0: No Effect" = "#1565c0", "Ha: Large Effect" = "#2e7d32")) +
+  labs(
+    title = "Type II Error and Statistical Power",
+    x = "Observed Effect Size", 
+    y = "Probability Density",
+    color = "Distribution"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold", size = 14),
+    axis.title = element_text(face = "bold"),
+    plot.margin = margin(10, 15, 10, 10)
+  )
+```
+
+## Power Revisited
+
+- **Power:** Probability of correctly rejecting false $H_0$ (1 - β)
+- Underpowered "negative" study can be uninformative
+- *A priori* power calculation is good scientific practice
+- **Post-hoc power** calculations generally unhelpful; focus on CI instead
+
+```{r power_concept_plot_complete, echo=FALSE, fig.width=8, fig.height=5, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+x_power <- seq(-4, 8, length.out = 200)
+null_dist <- dnorm(x_power, mean = 0, sd = 1.5)
+alt_dist_large_effect <- dnorm(x_power, mean = 4, sd = 1.5) 
+crit_val <- qnorm(0.975, mean = 0, sd = 1.5) 
+
+power_df <- data.frame(x = x_power, 
+                       null = null_dist, 
+                       alt_large = alt_dist_large_effect)
+
+ggplot(power_df, aes(x = x)) +
+  # Add shaded regions
+  geom_ribbon(data = subset(power_df, x <= crit_val), 
+              aes(ymax = alt_large, ymin = 0), fill = "#bbdefb", alpha = 0.5) +
+  geom_ribbon(data = subset(power_df, x >= crit_val), 
+              aes(ymax = alt_large, ymin = 0), fill = "#c8e6c9", alpha = 0.7) +
+  geom_ribbon(data = subset(power_df, x >= crit_val), 
+              aes(ymax = null, ymin = 0), fill = "#ffcdd2", alpha = 0.5) +
+  # Add distribution lines
+  geom_line(aes(y = null, color = "H0: No Effect"), linewidth = 1.2) +
+  geom_line(aes(y = alt_large, color = "Ha: Large Effect"), linewidth = 1.2) +
+  # Critical value line
+  geom_vline(xintercept = crit_val, linetype = "dashed", color = "black", linewidth = 0.8) +
+  # Annotations
+  annotate("text", x = crit_val + 0.5, y = 0.2, label = "Reject H0", hjust = 0, fontface = "bold") +
+  annotate("text", x = 3.6, y = -0.02, label = "Type I\nError (α)", color = "#d32f2f", size = 4) +
+  annotate("text", x = 2.0, y = 0.03, label = "Type II\nError (β)", color = "#1565c0", size = 5) +
+  annotate("text", x = 4.5, y = 0.11, label = "POWER", color = "darkgreen", size = 5, fontface = "bold") +
+  # Scales and theme
+  scale_color_manual(values = c("H0: No Effect" = "#1565c0", "Ha: Large Effect" = "#2e7d32")) +
+  labs(
+    title = "Statistical Power: Detecting a True Effect",
+    subtitle = "Larger effect sizes and larger samples increase power",
+    x = "Observed Effect Size", 
+    y = "Probability Density",
+    color = "Distribution"
+  ) +
+  coord_cartesian(clip = "off") +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(face = "italic"),
+    axis.title = element_text(face = "bold"),
+    plot.margin = margin(10, 15, 10, 15)  # Added more margin on right side
+  )
+```
+
+## Understanding 90% Power for the Study
+
+::: {.columns}
+::: {.column width="48%"}
+```{r power_distribution_viz, echo=FALSE, fig.height=4.2, fig.width=5, fig.align='center'}
+library(ggplot2)
+x_power <- seq(-4, 8, length.out = 200)
+null_dist <- dnorm(x_power, mean = 0, sd = 1.5)
+alt_dist_large_effect <- dnorm(x_power, mean = 4, sd = 1.5) 
+crit_val <- qnorm(0.975, mean = 0, sd = 1.5) 
+
+power_df <- data.frame(x = x_power, 
+                       null = null_dist, 
+                       alt_large = alt_dist_large_effect)
+
+ggplot(power_df, aes(x = x)) +
+  # Add shaded regions
+  geom_ribbon(data = subset(power_df, x <= crit_val), 
+              aes(ymax = alt_large, ymin = 0), fill = "#bbdefb", alpha = 0.5) +
+  geom_ribbon(data = subset(power_df, x >= crit_val), 
+              aes(ymax = alt_large, ymin = 0), fill = "#c8e6c9", alpha = 0.7) +
+  geom_ribbon(data = subset(power_df, x >= crit_val), 
+              aes(ymax = null, ymin = 0), fill = "#ffcdd2", alpha = 0.5) +
+  # Add distribution lines
+  geom_line(aes(y = null, color = "Under H0"), linewidth = 1.2) +
+  geom_line(aes(y = alt_large, color = "Under H1"), linewidth = 1.2) +
+  # Critical value line
+  geom_vline(xintercept = crit_val, linetype = "dashed", color = "black") +
+  # Annotations
+  annotate("text", x = 3.75, y = -0.02, label = "Type I (α)\n5%", color = "#d32f2f", size = 3) +
+  annotate("text", x = 2.0, y = 0.02, label = "Type II (β)\n10%", color = "#1565c0", size = 3) +
+  annotate("text", x = 4.5, y = 0.08, label = "POWER\n90%", color = "darkgreen", size = 4, fontface = "bold") +
+  # Scales and theme
+  scale_color_manual(values = c("Under H0" = "#1565c0", "Under H1" = "#2e7d32")) +
+  labs(
+    title = "90% Power for Butz et al. Study",
+    subtitle = "With n=110 per group, 17% effect size, α=0.05",
+    x = "Effect Size", 
+    y = "Probability",
+    color = "Distribution"
+  ) +
+  theme_minimal(base_size = 10) +
+  theme(
+    legend.position = "bottom",
+    panel.grid.minor = element_blank()
+  )
+```
+:::
+
+::: {.column width="48%"}
+### What 90% Power Means
+- If the intervention truly reduces ED visits from 92% to 75%, we have a 90% chance of detecting this effect
+
+### Error Risks with n=110 per group
+- **Type I error (α=0.05)**: 5% chance of falsely claiming the intervention works when it doesn't
+- **Type II error (β=0.10)**: 10% chance of missing a true effect when it exists
+:::
+:::
+
+## Actual Study Groups (Butz et al., 2019)
+
+::: {.columns}
+::: {.column width="48%"}
+### Intervention Group (n=107)
+- **ED Follow-up Visit** within 7 days:
+  - Asthma symptom evaluation
+  - Medication review & inhaler technique
+  - Review allergen & cotinine results with visual aids
+
+- **Two Home Nurse Visits**:
+  - **Targeted** EC education based on allergen sensitization
+  - **Active remediation** (traps, baits, trash cans)
+  - **Motivational interviewing** for smoking cessation
+  
+- PCP follow-up scheduled within 4 weeks
+:::
+
+::: {.column width="48%"}
+### Control Group (n=115)
+- **No ED Follow-up**
+
+- **Three Home Nurse Visits** over 3 months:
+  - Standard asthma education
+  - Medication use & inhaler technique evaluation
+  - **Basic** EC education without remediation
+  - Review of mailed allergen & cotinine results
+  
+- **Passive interventions**:
+  - Referrals to smoking cessation programs
+  - Lab results mailed to caregivers/PCPs
+  
+- PCP follow-up scheduled
+:::
+:::
+
+## Results: Primary Outcome (Butz et al., 2019)
+
+"There was no difference in increased risk of >1 ED visit at 12 months between INT and CON groups."
+
+Cox Proportional Hazards for INT vs CON: 
+- **HR 1.10 (95% CI, 0.76–1.69)**
+- **P = 0.61**
+
+```{r butz_hr_plot, echo=FALSE, fig.align='center', fig.width=7, fig.height=4, message=FALSE, warning=FALSE}
+library(ggplot2)
+butz_hr_df <- data.frame(
+  Group = "Intervention vs Control",
+  HR = 1.10,
+  LowerCI = 0.76,
+  UpperCI = 1.69
+)
+
+ggplot(butz_hr_df, aes(x = HR, y = Group)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey50", linewidth = 0.8) +
+  geom_errorbarh(aes(xmin = LowerCI, xmax = UpperCI), height = 0.2, color = "#e57373", linewidth = 1.5) +
+  geom_point(size = 5, color = "#e57373", shape = 18) +
+  scale_x_continuous(limits=c(0.5, 2.0), breaks=seq(0.5, 2.0, 0.25)) +
+  labs(
+    title = "Hazard Ratio for >1 ED Visit (Intervention vs Control)",
+    subtitle = "Butz et al. (2019) - Overall Group",
+    x = "Hazard Ratio (HR)", 
+    y = "",
+    caption = "95% Confidence Interval: 0.76 to 1.69, p = 0.61"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.y = element_text(face = "bold", size = 11),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(face = "italic"),
+    axis.title.x = element_text(face = "bold", margin = margin(t = 10)),
+    plot.caption = element_text(hjust = 0, face = "italic", color = "grey40"),
+    plot.margin = margin(10, 15, 10, 10)
+  ) +
+  annotate("text", x = 0.965, y = 0.7, angle = 90, label = "No effect", color = "grey50", fontface = "italic")
+```
+
+## "No Significant Difference": What Does It Mean?
+
+- Not necessarily "NO effect"
+- Means study **failed to reject $H_0$**
+
+- **Possible Reasons:**
+  1. **True lack of effect** (or tiny effect)
+  2. **Type II Error (β):** Intervention works, but study missed it
+  - Powered at 90% for 17% reduction (10% Type II error risk)
+  - If true effect smaller, study likely underpowered
+
+## Butz et al. Confidence Interval
+
+- HR 1.10 (**95% CI, 0.76 to 1.69**)
+  - CI includes 1.0 (no difference in hazard)
+- True effect could range from:
+  - 24% reduction in hazard for INT (HR 0.76)
+  - 69% increase in hazard for INT (HR 1.69)
+- Wide CI indicates substantial imprecision
+
+- **CI helps determine if clinically meaningful effect is ruled out**
+
+## Subgroup Finding (Butz et al., 2019)
+
+- For children *without secondhand smoke exposure*, median time to first recurrent ED visit differed significantly:
+  - CON: 195 days
+  - INT: >365 days (adjusted analysis)
+
+```{r butz_km_plot, echo=FALSE, fig.height=6, fig.width=8.5, fig.align='center', message=FALSE, warning=FALSE}
+library(survival)
+library(survminer)
+
+# Assuming we're working with simulated data to match the paper's results
+set.seed(123)
+n_con_no_shs <- 50 
+n_int_no_shs <- 48 
+
+# Create simulated survival times to match published curves
+days <- c(0, 50, 100, 150, 200, 250, 300, 350, 365)
+prob_con_no_shs <- c(1.00, 0.90, 0.80, 0.70, 0.50, 0.40, 0.35, 0.32, 0.31) 
+prob_int_no_shs <- c(1.00, 0.95, 0.90, 0.85, 0.75, 0.65, 0.60, 0.58, 0.56) 
+
+# Generate event times for control group
+sim_times_con <- numeric()
+for(i in 1:(length(days)-1)) {
+  num_events <- round(n_con_no_shs * (prob_con_no_shs[i] - prob_con_no_shs[i+1]))
+  if (num_events > 0) sim_times_con <- c(sim_times_con, runif(num_events, days[i], days[i+1]))
+}
+sim_times_con <- c(sim_times_con, rep(365, n_con_no_shs - length(sim_times_con)))
+events_con <- ifelse(sim_times_con < 365, 1, 0)
+
+# Generate event times for intervention group
+sim_times_int <- numeric()
+for(i in 1:(length(days)-1)) {
+  num_events <- round(n_int_no_shs * (prob_int_no_shs[i] - prob_int_no_shs[i+1]))
+  if (num_events > 0) sim_times_int <- c(sim_times_int, runif(num_events, days[i], days[i+1]))
+}
+sim_times_int <- c(sim_times_int, rep(365, n_int_no_shs - length(sim_times_int)))
+events_int <- ifelse(sim_times_int < 365, 1, 0)
+
+# Combine data
+sim_butz_km_data <- data.frame(
+  time = c(sim_times_con, sim_times_int),
+  event = c(events_con, events_int),
+  group = factor(c(rep("Control (No SHS)", n_con_no_shs), rep("Intervention (No SHS)", n_int_no_shs)))
+)
+
+# Create survival fit
+fit_butz_km <- survfit(Surv(time, event) ~ group, data = sim_butz_km_data)
+
+# Enhanced Kaplan-Meier plot
+ggsurvplot(
+  fit_butz_km,
+  data = sim_butz_km_data,
+  pval = TRUE,
+  pval.coord = c(50, 0.2),
+  conf.int = TRUE,
+  conf.int.alpha = 0.2,
+  risk.table = TRUE,
+  risk.table.height = 0.3,
+  xlab = "Days to Repeat ED Visit",
+  ylab = "Probability of No Repeat ED Visit",
+  legend.labs = c("Control (No SHS)", "Intervention (No SHS)"),
+  palette = c("#e57373", "#64b5f6"),
+  ggtheme = theme_minimal(base_size = 11),
+  title = "Time to Repeat ED Visit in Children without SHS Exposure",
+  subtitle = "Simulated data based on Butz et al. (2019)",
+  font.title = c(14, "bold"),
+  font.subtitle = c(12, "italic"),
+  font.x = c(11, "bold"),
+  font.y = c(11, "bold"),
+  risk.table.fontsize = 3.8,
+  tables.theme = theme_cleantable()
+)
+```
+
+- **Caution with Subgroup Analyses:**
+  - May not be pre-specified
+  - Multiple comparisons increase Type I error risk
+  - Consider as hypothesis-generating rather than definitive
+
+## Teaching Points: Butz et al. Asthma Study
+
+- RCTs provide strong evidence for testing interventions
+- *A Priori* Power Analysis is essential for study planning
+- Interpreting "Negative" Results:
+  - "Failed to reject $H_0$," not "proved $H_0$ true"
+  - Consider Type II error possibility
+  - Examine CI: Does it exclude clinically important effects?
+  - P-values aren't everything; CIs provide more information
+  - Subgroup analyses should be interpreted cautiously
+
+# Case Study 3: "Positive" Trial - Treating AOM
+
+## Question: Antibiotics for Acute Otitis Media (AOM) in Young Kids?
+
+- AOM is common, antibiotic use widespread but controversial
+- **Study:** Tähtinen PA, et al. (2011). A placebo-controlled trial of antimicrobial treatment for acute otitis media. *N Engl J Med*, 364(2), 116-26.
+
+## Study Design: Another RCT
+
+- **Population:** Children 6-35 months with AOM by strict diagnostic criteria
+- **Intervention:** Amoxicillin-clavulanate (n=161)
+- **Control:** Placebo (n=158)
+- **Primary Outcome:** Treatment failure by day 8 (composite endpoint)
+- **Design Strengths:** Randomized, Double-Blind, Placebo-Controlled
+
+## Results: Clear Difference
+
+::: {.columns}
+::: {.column width="55%"}
+- **Treatment Failure Rate by Day 8:**
+  - **Amoxicillin-clavulanate:** 18.6% (30/161)
+- **Placebo:** 44.9% (71/158)
+- **P-value < 0.001**
+  - **Key Statistics:**
+  - **Absolute Risk Reduction:** 26.3%
+- **Number Needed to Treat:** 4
+- **Relative Risk Reduction:** 58.6%
+
+:::
+::: {.column width="45%"}
+
+```{r tahtinen_failure_plot_improved, echo=FALSE, fig.width=5, fig.height=4.5, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+aom_failure_data <- data.frame(
+  Group = factor(c("Amox-Clav", "Placebo"), levels = c("Placebo", "Amox-Clav")),
+  FailureRate = c(0.186, 0.449),
+  Count = c("30/161", "71/158")
+)
+
+# Enhanced bar plot with better aesthetic elements
+ggplot(aom_failure_data, aes(x = Group, y = FailureRate, fill = Group)) +
+  # Add nicer bars with gradient shading
+  geom_bar(stat = "identity", width = 0.6, color = "grey30") +
+  
+  # Add percentage labels on top of bars
+  geom_text(aes(label = scales::percent(FailureRate, accuracy = 0.1)), 
+            position = position_dodge(width = 0.6), vjust = -0.7, 
+            fontface = "bold", size = 5) +
+  
+  # Add raw count labels inside bars
+  geom_text(aes(label = Count, y = FailureRate/2), 
+            position = position_dodge(width = 0.6),
+            color = "white", fontface = "bold", size = 4) +
+  
+  # Add arrow showing reduction
+  geom_segment(aes(x = 1, xend = 2, y = 0.449, yend = 0.186),
+               arrow = arrow(length = unit(0.3, "cm"), type = "closed"),
+               color = "grey30", linewidth = 0.8) +
+  
+  # Add nicer annotation for ARR
+  annotate("label", x = 1.5, y = 0.35, 
+           label = "26.3% Absolute\nRisk Reduction", 
+           fontface = "bold", size = 4,
+           fill = "white", alpha = 0.8) +
+  
+  scale_y_continuous(labels = scales::percent, limits = c(0, 0.55)) +
+  scale_fill_manual(values = c("Amox-Clav" = "#4a148c", "Placebo" = "#e65100")) +
+  
+  labs(
+    title = "Treatment Failure Rates in Acute Otitis Media",
+    subtitle = "Tähtinen et al. (2011): Double-blind RCT",
+    x = "",
+    y = "Proportion with Treatment Failure"
+  ) +
+  
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(face = "bold", size = 12),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(face = "italic"),
+    axis.title.y = element_text(face = "bold"),
+    plot.margin = margin(15, 15, 10, 15)
+  )
+```
+:::
+:::
+
+## Calculating Absolute Risk Reduction (ARR)
+
+::: {.columns}
+::: {.column width="50%"}
+### Step 1: Gather Raw Data
+- **Placebo group**: 
+  - 71 failures out of 158 patients
+- Failure rate = 71 ÷ 158 = 0.449 (44.9%)
+
+- **Amoxicillin-clavulanate group**: 
+  - 30 failures out of 161 patients
+- Failure rate = 30 ÷ 161 = 0.186 (18.6%)
+
+### Step 2: Calculate ARR
+- ARR = Risk₁ - Risk₂
+- ARR = 0.449 - 0.186 = 0.263 (26.3%)
+:::
+  
+::: {.column width="50%"}
+```{r arr_calculation, echo=FALSE, fig.height=4, fig.width=5, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+
+# Create data for visualization
+df <- data.frame(
+  Group = rep(c("Placebo", "Amox-Clav"), each=2),
+  Outcome = rep(c("Success", "Failure"), 2),
+  Count = c(158-71, 71, 161-30, 30),
+  Percentage = c((158-71)/158, 71/158, (161-30)/161, 30/161)
+)
+
+# Create the calculation display
+g1 <- ggplot() +
+  # Create a blank canvas
+  annotate("rect", xmin = 0, xmax = 1, ymin = 0, ymax = 1, fill = "white") +
+  
+  # Add calculation steps
+  annotate("text", x = 0.5, y = 0.9, label = "ARR Calculation", fontface = "bold", size = 6) +
+  annotate("text", x = 0.5, y = 0.75, label = "Placebo failure rate - Treatment failure rate", size = 4.5) +
+  annotate("text", x = 0.5, y = 0.6, label = "= 44.9% - 18.6%", size = 5) +
+  annotate("text", x = 0.5, y = 0.45, label = "= 26.3%", fontface = "bold", size = 6, color = "darkblue") +
+  
+  # Add ARR interpretation
+  annotate("text", x = 0.5, y = 0.25, label = "For every 100 patients treated", size = 4) +
+  annotate("text", x = 0.5, y = 0.15, label = "26.3 fewer will experience treatment failure", 
+           fontface = "bold", size = 4.5, color = "darkblue") +
+  
+  # Theme elements
+  theme_void() +
+  theme(panel.background = element_rect(fill = "#f8f8f8", color = NA),
+        plot.margin = margin(10, 10, 10, 10))
+
+# Display the plot
+g1
+```
+:::
+:::
+  
+## Absolute Risk Reduction to Number Needed to Treat
+  
+::: {.columns}
+::: {.column width="45%"}
+### Step 3: Calculate NNT
+- NNT = 1 ÷ ARR
+- NNT = 1 ÷ 0.263 = 3.8 ≈ 4
+
+### Clinical Interpretation
+- **NNT = 4** means:
+  - You need to treat 4 children with antibiotics to prevent 1 case of treatment failure
+- The other 3 children either:
+  - Would recover without antibiotics
+- Would still fail despite antibiotics
+:::
+  
+::: {.column width="55%"}
+```{r nnt_visualization, echo=FALSE, fig.width=6, fig.height=4.2, fig.align='center', message=FALSE, warning=FALSE}
+library(ggplot2)
+
+# Set up data for 4 patients
+patient_data <- data.frame(
+  x = c(1, 2, 3, 4),
+  y = c(1, 1, 1, 1),
+  outcome = c("Benefit", "No Benefit", "No Benefit", "No Benefit"),
+  description = c("Would fail without\ntreatment but\nsucceeds with it", 
+                  "Would succeed\nregardless of\ntreatment", 
+                  "Would succeed\nregardless of\ntreatment", 
+                  "Would fail\nregardless of\ntreatment")
+)
+
+# Create the NNT visualization
+ggplot(patient_data, aes(x = x, y = y, fill = outcome)) +
+  # Add patient circles
+  geom_point(size = 40, shape = 21, color = "gray30") +
+  
+  # Add text labels
+  geom_text(aes(label = "Patient"), y = 1.1, size = 3.5) +
+  geom_text(aes(label = x), y = 1.1, vjust = 1.8, fontface = "bold", size = 4) +
+  geom_text(aes(label = description), vjust = 0.7, size = 3.2) +
+  
+  # Add title
+  annotate("text", x = 2.5, y = 1.2, 
+           label = "Number Needed to Treat (NNT) = 4", 
+           size = 6, fontface = "bold") +
+  
+  # Set colors
+  scale_fill_manual(values = c("Benefit" = "#4CAF50", "No Benefit" = "#90A4AE")) +
+  
+  # Set theme elements
+  theme_void() +
+  theme(legend.position = "none",
+        plot.margin = margin(20, 10, 10, 10)) +
+  ylim(0.7, 1.5) +
+  xlim(0.5, 4.5)
+```
+:::
+:::
+  
+## Clinical Significance of NNT = 4
+  
+::: {.columns}
+::: {.column width="48%"}
+### Interpreting NNT = 4 in AOM
+
+#### Context:
+- Widely considered an excellent NNT
+- For comparison:
+  - NNT for antibiotics in adult sinusitis: ~15
+- NNT for statins preventing heart attack: ~60
+- NNT for aspirin preventing stroke: ~100
+
+#### Benefits:
+- Reduced symptom duration
+- Decreased risk of mastoiditis and other complications
+- Improved quality of life for child and family
+:::
+  
+::: {.column width="48%"}
+### Balancing Benefits and Harms
+
+#### Costs:
+- Antibiotic resistance concerns
+- Side effects (diarrhea: NNH ≈ 7)
+- Financial cost of treatment
+- Medicalization of common condition
+
+#### Clinical Application:
+- Consider NNT alongside:
+  - Symptom severity
+- Age (higher benefit in younger children)
+- Bilateral vs unilateral disease
+- Presence of fever or severe pain
+:::
+:::
+
+## Hazard Ratio (Tähtinen et al.)
+
+- **HR = 0.38 (95% CI, 0.25 to 0.59)** for treatment failure
+- **Interpretation:** Amoxicillin-clavulanate group had ~62% *lower hazard* (instantaneous risk) of failure compared to placebo
+- CI completely below 1.0 → statistically significant effect
+
+```{r tahtinen_km_plot, echo=FALSE, fig.height=6, fig.width=8.5, fig.align='center', message=FALSE, warning=FALSE}
+library(survival)
+library(survminer)
+
+# Simulated data to match the paper's reported proportions
+set.seed(123)
+n_amox_t <- 161
+n_plac_t <- 158
+time_amox_t <- ifelse(rbinom(n_amox_t, 1, 0.186) == 1, runif(n_amox_t, 1, 8), 8)
+event_amox_t <- ifelse(time_amox_t < 8, 1, 0)
+time_plac_t <- ifelse(rbinom(n_plac_t, 1, 0.449) == 1, runif(n_plac_t, 1, 8), 8)
+event_plac_t <- ifelse(time_plac_t < 8, 1, 0)
+
+sim_aom_data_t <- data.frame(
+  time = c(time_amox_t, time_plac_t),
+  event = c(event_amox_t, event_plac_t),
+  group = factor(c(rep("Amox-Clav", n_amox_t), rep("Placebo", n_plac_t)))
+)
+
+fit_aom_t <- survfit(Surv(time, event) ~ group, data = sim_aom_data_t)
+
+# Enhanced Kaplan-Meier plot
+ggsurvplot(
+  fit_aom_t,
+  data = sim_aom_data_t,
+  pval = TRUE,
+  pval.coord = c(2, 0.2),
+  conf.int = TRUE,
+  conf.int.alpha = 0.2,
+  risk.table = TRUE,
+  risk.table.height = 0.3,
+  xlab = "Days to Treatment Failure",
+  ylab = "Probability of No Treatment Failure",
+  legend.labs = c("Amoxicillin-Clavulanate", "Placebo"),
+  palette = c("#9575cd", "#ffb74d"),
+  ggtheme = theme_minimal(base_size = 11),
+  title = "Time to Treatment Failure in AOM",
+  subtitle = "Simulated data based on Tähtinen et al. (2011)",
+  font.title = c(14, "bold"),
+  font.subtitle = c(12, "italic"),
+  font.x = c(11, "bold"),
+  font.y = c(11, "bold"),
+  risk.table.fontsize = 3.8,
+  tables.theme = theme_cleantable(),
+  surv.scale = "percent"
+)
+```
+
+## Teaching Points: Tähtinen et al. AOM Study
+
+- Strong study design minimizes bias
+- Clear, clinically relevant primary outcome
+- Statistically significant result (low p-value, HR CI excludes 1)
+- **Clinical meaningfulness assessment:**
+  - NNT quantifies intervention benefit
+  - Must weigh against harms (side effects, cost, resistance)
+  - Statistical significance ≠ automatic clinical action
+  - Results presented via proportions (fixed timepoint) & HRs (time-to-event)
+
+# Synthesis & Key Takeaways
+
+## Pulling It All Together
+
+1.  **Diagnostic Models (Mawji et al.):**
+  - Logistic regression effectively combines factors to estimate outcome probability
+  - Transparency (equation) & performance metrics (AUC, sens, spec) are essential
+
+2.  **"Negative" Trials (Butz et al., Teunissen et al.):**
+  - "No significant difference" ≠ "No effect"
+  - Evaluate study power & CI width; was clinically important benefit ruled out?
+
+3.  **"Positive" Trials (Tähtinen et al.):**
+  - Statistical significance is necessary but insufficient
+  - Effect size (ARR, NNT, HR) & CIs show magnitude/precision
+  - Clinical significance requires weighing benefits vs. harms, costs, patient values
+
+## Final Thoughts for Clinical Practice
+
+- **Be a critical consumer:** Understand study design & limitations
+- **Look beyond p-values:** Consider effect sizes, CIs, clinical relevance
+- **Integrate evidence with patient context and preferences**
+- **EBM is a continuous learning process**
+
+# Questions?
+
+##
