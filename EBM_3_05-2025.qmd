@@ -151,7 +151,6 @@ ggplot(df_pyr, aes(xmin = 0, xmax = Value, ymin = ymin-2.5, ymax = ymax+2.5, fil
 - **Null Hypothesis ($H_0$):** Assumption of NO difference or NO effect
 - Research aims to *reject* or *fail to reject* $H_0$
 - **P-value:** Probability of observing study results (or more extreme) IF $H_0$ is true
-- **Not** P($H_0$ is true)
 - $\alpha$ (chosen before the study) sets the Type I-error rate
 
 ## Core Concepts (2/3)
@@ -162,13 +161,13 @@ ggplot(df_pyr, aes(xmin = 0, xmax = Value, ymin = ymin-2.5, ymax = ymax+2.5, fil
 
 ## Core Concepts (3/3)
 
-- **Regression:** Statistical method modeling relationships between predictors and outcomes
-- **Logistic Regression:** For binary outcomes (yes/no); estimates *odds* of outcome
+- **Regression:** Statistical method modeling relationships between predictors and **continuous** outcomes
+- **Logistic Regression:** For binary outcomes (yes/no); actually estimates continuous *odds* of outcome
 - **Bias:** Systematic error in study design or execution
 - **Confounding:** Third variable distorts exposure-outcome relationship
 - RCTs help minimize these issues through randomization
 
-# Case Study 1: Diagnostic Modeling - Pediatric Triage
+# Case Study 1: ED Triage in LMCs
 
 ## Challenge: Spotting Sick Kids Fast
 
@@ -434,7 +433,7 @@ ggplot(risk_df, aes(x = x, y = 0)) +
 - Performance metrics (AUC, Sensitivity, Specificity) are crucial
 - Risk stratification translates model output to actionable decisions
 
-# Case Study 2: "Negative" Trial - Power & Asthma
+# Case Study 2: Negative Trial - Asthma
 
 ## Question: Home Environmental Interventions for Asthma ED Visits?
 
@@ -1032,7 +1031,7 @@ ggsurvplot(
   - P-values aren't everything; CIs provide more information
   - Subgroup analyses should be interpreted cautiously
 
-# Case Study 3: "Positive" Trial - Treating AOM
+# Case Study 3: Positive Trial - Treating AOM
 
 ## Question: Antibiotics for Acute Otitis Media (AOM) in Young Kids?
 
