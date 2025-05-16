@@ -1307,7 +1307,7 @@ ggplot(patient_data, aes(x = x, y = y, fill = outcome)) +
 
 - Strong study design minimizes bias
 - Clear, clinically relevant primary outcome
-- Statistically significant result (low p-value, HR CI excludes 1)
+- Statistically significant result
 - **Clinical meaningfulness assessment:**
   - NNT quantifies intervention benefit
   - Must weigh against harms (side effects, cost, resistance)
