@@ -1276,8 +1276,8 @@ ggplot(patient_data, aes(x = x, y = y, fill = outcome)) +
 - Widely considered an excellent NNT
 - For comparison:
   - NNT for antibiotics in adult sinusitis: ~15
-- NNT for statins preventing heart attack: ~60
-- NNT for aspirin preventing stroke: ~100
+  - NNT for statins preventing heart attack: ~60
+  - NNT for aspirin preventing stroke: ~100
 
 #### Benefits:
 - Reduced symptom duration
