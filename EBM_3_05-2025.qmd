@@ -175,6 +175,35 @@ ggplot(df_pyr, aes(xmin = 0, xmax = Value, ymin = ymin-2.5, ymax = ymax+2.5, fil
 - How to systematically use available information?
 - **Study:** Mawji A, Li E, Dunsmuir D, et al. (2022). Smart triage: Development of a rapid pediatric triage algorithm for use in low-and-middle income countries. *Frontiers in Pediatrics*, 10, 976870.
 
+# Study Design: Smart Triage Model
+
+## Question: Can We Build a Rapid Triage Tool for Acutely Ill Children in Low-Resource Settings?
+
+::: {.columns}
+::: {.column width="48%"}
+### Methodology
+- **Population:** Children under 19 years with acute illness at ED in Jinja, Uganda (90% under 5 years)
+- **Study Type:** Prospective cohort study for model development
+- **Sample:** 1,612 participants (80:20 train/test split)
+- **Primary Outcome:** Hospital admission for >24 hours
+:::
+
+::: {.column width="4%"}
+<!-- Spacer column -->
+:::
+
+::: {.column width="48%"}
+### Model Development
+- **Candidate Predictors:** 63 variables based on PS2 working group guidelines
+- **Variable Selection:** Bootstrapped stepwise regression
+- **Final Model:** 9-variable logistic regression
+- **Risk Stratification:**
+  - Low risk threshold: 8% (91% sensitivity)
+  - High risk threshold: 40% (92% specificity)
+  - Categories: Non-urgent, Priority, Emergency
+:::
+:::
+
 ## Building the Model: Logistic Regression
 
 - **Goal:** Predict hospital admission (proxy for severe illness)
