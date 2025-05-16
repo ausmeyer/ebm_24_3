@@ -449,8 +449,8 @@ Austin Meyer, MD, PhD, MS, MPH, MS
 <li><strong>Null Hypothesis (<span class="math inline">\(H_0\)</span>):</strong> Assumption of NO difference or NO effect</li>
 <li>Research aims to <em>reject</em> or <em>fail to reject</em> <span class="math inline">\(H_0\)</span></li>
 <li><strong>P-value:</strong> Probability of observing study results (or more extreme) IF <span class="math inline">\(H_0\)</span> is true</li>
-<li><strong>Not</strong> P(<span class="math inline">\(H_0\)</span> is true) or P(Type I error)</li>
-<li>P(Data | <span class="math inline">\(H_0\)</span>) — Informs Type I error risk</li>
+<li><strong>Not</strong> P(<span class="math inline">\(H_0\)</span> is true)</li>
+<li><span class="math inline">\(\alpha\)</span> (chosen before the study) sets the Type I-error rate</li>
 </ul>
 </section>
 <section id="core-concepts-23" class="slide level2">
@@ -531,15 +531,21 @@ Austin Meyer, MD, PhD, MS, MPH, MS
 <h2>Example: Simulated Patient</h2>
 <ul>
 <li>Age: 12 months (<span class="math inline">\(\sqrt{12} \approx 3.464\)</span>)</li>
-<li>HR: 140 bpm; Temp: 38.5 <span class="math inline">\(^\circ C\)</span>; MUAC: 130 mm</li>
-<li>O<span class="math inline">\(_2\)</span> Sat: 92% (Transformed: <span class="math inline">\(70.103 \times \log_{10}(101.687 - 92) - 55.833 \approx 13.302\)</span>)</li>
-<li>Parent concern: Yes (1); Difficulty breathing: Yes (1)</li>
-<li>Oedema: No (0); Pallor: Yes (1)</li>
+<li>HR: 110 bpm</li>
+<li>Temp: 37 <span class="math inline">\(^\circ C\)</span></li>
+<li>MUAC: 130 mm</li>
+<li>O<span class="math inline">\(_2\)</span> Sat: 98% (Transformed: <span class="math inline">\(70.103 \times \log_{10}(101.687 - 98) - 55.833 \approx 13.302\)</span>)</li>
+<li>Parent concern: Yes (1)</li>
+<li>Difficulty breathing: Yes (1)</li>
+<li>Oedema: No (0)</li>
+<li>Pallor: No (0)</li>
 </ul>
 <ul>
-<li>Calculated Result:</li>
-<li>Logit(p) = -0.925</li>
-<li>Probability of admission = 0.284 (28.4%)</li>
+<li>Calculated Result:
+<ul>
+<li>Logit(p) = -0.78</li>
+<li>Probability of admission = 0.31 (31.43%)</li>
+</ul></li>
 </ul>
 </section>
 <section id="model-performance-risk-stratification" class="slide level2">
@@ -553,7 +559,7 @@ Austin Meyer, MD, PhD, MS, MPH, MS
 <li>Categories: Non-urgent, Priority, Emergency</li>
 </ul></li>
 </ul>
-<p><strong>Our patient:</strong> p = 28.4% → <strong>Priority</strong> (between 8% and 40%)</p>
+<p><strong>Our patient:</strong> p = (31.43% → <strong>Priority</strong> (between 8% and 40%)</p>
 
 <img data-src="EBM_3_05-2025_files/figure-revealjs/risk_strat_plot-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"></section>
 <section id="teaching-points-mawji-et-al.-triage-model" class="slide level2">

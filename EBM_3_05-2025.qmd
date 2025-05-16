@@ -151,8 +151,8 @@ ggplot(df_pyr, aes(xmin = 0, xmax = Value, ymin = ymin-2.5, ymax = ymax+2.5, fil
 - **Null Hypothesis ($H_0$):** Assumption of NO difference or NO effect
 - Research aims to *reject* or *fail to reject* $H_0$
 - **P-value:** Probability of observing study results (or more extreme) IF $H_0$ is true
-- **Not** P($H_0$ is true) or P(Type I error)
-- P(Data | $H_0$) — Informs Type I error risk
+- **Not** P($H_0$ is true)
+- $\alpha$ (chosen before the study) sets the Type I-error rate
 
 ## Core Concepts (2/3)
 
@@ -287,52 +287,56 @@ ggplot(sigmoid_df, aes(x = LogitP, y = Probability)) +
 ## Example: Simulated Patient
 
 - Age: 12 months ($\sqrt{12} \approx 3.464$)
-- HR: 140 bpm; Temp: 38.5 $^\circ C$; MUAC: 130 mm
-- O$_2$ Sat: 92% (Transformed: $70.103 \times \log_{10}(101.687 - 92) - 55.833 \approx 13.302$)
-- Parent concern: Yes (1); Difficulty breathing: Yes (1)
-- Oedema: No (0); Pallor: Yes (1)
+- HR: 110 bpm
+- Temp: 37 $^\circ C$
+- MUAC: 130 mm
+- O$_2$ Sat: 98% (Transformed: $70.103 \times \log_{10}(101.687 - 98) - 55.833 \approx 13.302$)
+- Parent concern: Yes (1)
+- Difficulty breathing: Yes (1)
+- Oedema: No (0)
+- Pallor: No (0)
 
 ```{r mawji_calc, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 # Calculate example patient's probability
-intercept <- -32.888
-coef_sqrt_age <- 0.252
-coef_hr <- 0.016
-coef_temp <- 0.819
-coef_muac_mm <- -0.022
+intercept           <- -32.888
+coef_sqrt_age       <- 0.252
+coef_hr             <- 0.016
+coef_temp           <- 0.819
+coef_muac_mm        <- -0.022
 coef_transformed_o2 <- 0.048
 coef_parent_concern <- 1.793
 coef_diff_breathing <- 1.012
-coef_oedema <- 1.814
-coef_pallor <- 1.506
+coef_oedema         <- 1.814
+coef_pallor         <- 1.506
 
-age_months <- 12
-hr <- 140
-temp_c <- 38.5
-muac_mm_val <- 130
-spo2_val <- 92
+age_months           <- 12
+hr                   <- 110
+temp_c               <- 37
+muac_mm_val          <- 130
+spo2_val             <- 98
 transformed_o2_value <- 70.103 * log10(101.687 - spo2_val) - 55.833
-parent_concern_val <- 1
-diff_breathing_val <- 1
-oedema_val <- 0
-pallor_val <- 1
+parent_concern_val   <- 1
+diff_breathing_val   <- 1
+oedema_val           <- 0
+pallor_val           <- 0
 
 logit_p_mawji <- intercept +
-  (coef_sqrt_age * sqrt(age_months)) +
-  (coef_hr * hr) +
-  (coef_temp * temp_c) +
-  (coef_muac_mm * muac_mm_val) +
-  (coef_transformed_o2 * transformed_o2_value) +
-  (coef_parent_concern * parent_concern_val) +
-  (coef_diff_breathing * diff_breathing_val) +
-  (coef_oedema * oedema_val) +
-  (coef_pallor * pallor_val)
+                 coef_sqrt_age       * sqrt(age_months) +
+                 coef_hr             * hr +
+                 coef_temp           * temp_c +
+                 coef_muac_mm        * muac_mm_val +
+                 coef_transformed_o2 * transformed_o2_value +
+                 coef_parent_concern * parent_concern_val +
+                 coef_diff_breathing * diff_breathing_val +
+                 coef_oedema         * oedema_val +
+                 coef_pallor         * pallor_val
 
 prob_admission_mawji <- exp(logit_p_mawji) / (1 + exp(logit_p_mawji))
 ```
 
 - Calculated Result:
-- Logit(p) = -0.925
-- Probability of admission = 0.284 (28.4%)
+  - Logit(p) = `r round(logit_p_mawji, digits=2)`
+  - Probability of admission = `r round(prob_admission_mawji, digits=2)` (`r round(prob_admission_mawji*100, digits=2)`%)
 
 ## Model Performance & Risk Stratification
 
@@ -342,12 +346,12 @@ prob_admission_mawji <- exp(logit_p_mawji) / (1 + exp(logit_p_mawji))
   - High-risk threshold: > 40% probability (Specificity 92%)
   - Categories: Non-urgent, Priority, Emergency
 
-**Our patient:** p = 28.4% → **Priority** (between 8% and 40%)
+**Our patient:** p = (`r round(prob_admission_mawji*100, digits=2)`% → **Priority** (between 8% and 40%)
 
 ```{r risk_strat_plot, echo=FALSE, fig.align='center', fig.width=8, fig.height=3.5, message=FALSE, warning=FALSE}
 library(ggplot2)
 risk_df <- data.frame(x = c(0, 1))
-patient_prob <- 0.284  # Using the calculated probability from previous chunk
+patient_prob <- prob_admission_mawji  # Using the calculated probability from previous chunk
 
 ggplot(risk_df, aes(x = x, y = 0)) +
   # Base line with rounded ends
@@ -380,7 +384,7 @@ ggplot(risk_df, aes(x = x, y = 0)) +
            label = "Patient Risk", 
            color = "#2196f3", fontface = "bold", size = 4.5) +
   annotate("text", x = patient_prob, y = 0.05, 
-           label = paste0("P(admission) = 28%"), 
+           label = paste0("P(admission) = ", round(prob_admission_mawji*100, digits=2), "%"), 
            color = "#2196f3", size = 4) +
   
   # Category labels - larger and more distinct
