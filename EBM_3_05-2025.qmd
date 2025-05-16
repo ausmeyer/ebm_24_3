@@ -92,7 +92,7 @@ format:
 - **Observational:**
   - Cohort, Case-Control, Cross-Sectional
 - **Experimental:**
-- **Randomized Controlled Trials (RCTs) - *Gold Standard for Therapy***
+  - **Randomized Controlled Trials (RCTs) - *Gold Standard for Therapy***
 - **Syntheses:**
   - Systematic Reviews & Meta-Analyses
 :::
