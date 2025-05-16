@@ -909,14 +909,14 @@ ggplot(power_df, aes(x = x)) +
 
 "There was no difference in increased risk of >1 ED visit at 12 months between INT and CON groups."
 
-Cox Proportional Hazards for INT vs CON: 
-- **HR 1.10 (95% CI, 0.76–1.69)**
-- **P = 0.61**
+#### Cox Proportional Hazards for INT vs CON: 
+- HR 1.10 (95% CI, 0.76–1.69)
+- P = 0.61
 
 ```{r butz_hr_plot, echo=FALSE, fig.align='center', fig.width=7, fig.height=4, message=FALSE, warning=FALSE}
 library(ggplot2)
 butz_hr_df <- data.frame(
-  Group = "Intervention vs Control",
+  Group = "",
   HR = 1.10,
   LowerCI = 0.76,
   UpperCI = 1.69
