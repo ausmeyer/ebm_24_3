@@ -356,7 +356,7 @@ patient_prob <- prob_admission_mawji  # Using the calculated probability from pr
 ggplot(risk_df, aes(x = x, y = 0)) +
   # Base line with rounded ends
   geom_segment(aes(x = 0, xend = 1, y = 0, yend = 0), 
-               linewidth = 10, color = "#e0e0e0", 
+               linewidth = 10, color = "#e0e0e1", 
                lineend = "butt") +
   
   # Color segments - adjusting the Non-Urgent segment to extend all the way left
